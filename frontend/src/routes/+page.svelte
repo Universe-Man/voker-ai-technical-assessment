@@ -1,5 +1,4 @@
 <script lang="ts">
-
   // TODO:
   //   - Validate User Input
   //   - Clear User Input When Successful
@@ -29,7 +28,7 @@
   async function placeOrder() {
     loading = true;
     try {
-      const response = await fetch(`${import.meta.env.FAST_API_BACKEND_URL}/place-order`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/place-order`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -42,6 +41,7 @@
       }
       const data = await response.json();
       result = data.placed_order;
+      createOrder(result)
       userInput = "";
     } catch (error) {
       console.error(error);
@@ -52,13 +52,24 @@
     // use a temporary public API for testing
     // const res = await fetch("https://jsonplaceholder.typicode.com/users");
     // orders = await res.json();
-    orders = [
-      {id: 1, items: [{item: {name: "Burger"}, quantity: 2}, {item: {name: "Fries"}, quantity: 2}], valid: true},
-      {id: 2, items: [{item: {name: "Burger"}, quantity: 1}, {item: {name: "Fries"}, quantity: 2}, {item: {name: "Drink"}, quantity: 1}], valid: true},
-      {id: 3, items: [{item: {name: "Drink"}, quantity: 4}], valid: false},
-    ];
-    console.log(userInput)
+    // orders = [
+    //   {id: 1, items: [{item: {name: "Burger"}, quantity: 2}, {item: {name: "Fries"}, quantity: 2}], valid: true},
+    //   {id: 2, items: [{item: {name: "Burger"}, quantity: 1}, {item: {name: "Fries"}, quantity: 2}, {item: {name: "Drink"}, quantity: 1}], valid: true},
+    //   {id: 3, items: [{item: {name: "Drink"}, quantity: 4}], valid: false},
+    // ];
+    // console.log(userInput)
   }
+
+  function createOrder(result: any) { // would need to create a Result interface rather than any
+    console.log(result, 'oolo')
+    console.log(result.burgers, "burgers")
+    console.log(result.fries, "fries")
+    console.log(result.drinks, "drinks")
+    
+
+    // burgers += result.order.burgers
+  }
+
 </script>
 <div class="flex m-10 justify-evenly">
   <div class="bg-blue-500 text-white p-5 rounded-lg shadow-md">Total # of Burgers: {burgers}</div>
