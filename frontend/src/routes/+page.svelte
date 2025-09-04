@@ -24,9 +24,31 @@
   let orders: Order[] = [];
   let loading = false;
   let userInput = "";
+  let result = "";
 
   async function placeOrder() {
     loading = true;
+    try {
+      const response = await fetch(`${import.meta.env.FAST_API_BACKEND_URL}/place-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({order: userInput})
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const data = await response.json();
+      result = data.placed_order;
+      userInput = "";
+    } catch (error) {
+      console.error(error);
+      result = "Something went wrong.";
+    } finally {
+      loading = false;
+    }
     // use a temporary public API for testing
     // const res = await fetch("https://jsonplaceholder.typicode.com/users");
     // orders = await res.json();
@@ -35,8 +57,7 @@
       {id: 2, items: [{item: {name: "Burger"}, quantity: 1}, {item: {name: "Fries"}, quantity: 2}, {item: {name: "Drink"}, quantity: 1}], valid: true},
       {id: 3, items: [{item: {name: "Drink"}, quantity: 4}], valid: false},
     ];
-    loading = false;
-    userInput = ""; // if order successful (try/catch)
+    console.log(userInput)
   }
 </script>
 <div class="flex m-10 justify-evenly">
@@ -50,7 +71,7 @@
     type="text"
     placeholder="What Would You Like To Order?"
     class="outline rounded-md p-3 m-9 w-1/3 text-lg"
-    value={userInput}
+    bind:value={userInput}
   >
   <button on:click={placeOrder} class="outline rounded-md p-3 m-10 bg-green-500">
     Place Order
