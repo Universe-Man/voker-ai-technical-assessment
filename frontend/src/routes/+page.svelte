@@ -1,19 +1,12 @@
 <script lang="ts">
-  // TODO:
-  //   - Validate User Input
-  //   - Clear User Input When Successful
-  //   - Store User Input When Typed
-  //   - Add LLM Logic to Get Order Items From User Input
-  //   - Use LLM Response to Update Item Counts and Render the Order
 
   interface Order {
-    id: number;
+    orderNumber: number;
     items: { item: Item, quantity: number }[];
     valid: boolean;
   }
 
   interface Item {
-    // id: number;
     name: string;
   }
 
@@ -26,6 +19,9 @@
   let result = "";
 
   async function placeOrder() {
+    if (!userInput || userInput.length < 3) {
+      return;
+    };
     loading = true;
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/place-order`, {
@@ -41,7 +37,11 @@
       }
       const data = await response.json();
       result = data.placed_order;
-      createOrder(result)
+      if (result.valid) {
+        createOrder(result);
+      } else {
+        cancelOrder(result);
+      };
       userInput = "";
     } catch (error) {
       console.error(error);
@@ -49,26 +49,47 @@
     } finally {
       loading = false;
     }
-    // use a temporary public API for testing
-    // const res = await fetch("https://jsonplaceholder.typicode.com/users");
-    // orders = await res.json();
-    // orders = [
-    //   {id: 1, items: [{item: {name: "Burger"}, quantity: 2}, {item: {name: "Fries"}, quantity: 2}], valid: true},
-    //   {id: 2, items: [{item: {name: "Burger"}, quantity: 1}, {item: {name: "Fries"}, quantity: 2}, {item: {name: "Drink"}, quantity: 1}], valid: true},
-    //   {id: 3, items: [{item: {name: "Drink"}, quantity: 4}], valid: false},
-    // ];
-    // console.log(userInput)
   }
 
-  function createOrder(result: any) { // would need to create a Result interface rather than any
-    console.log(result, 'oolo')
-    console.log(result.burgers, "burgers")
-    console.log(result.fries, "fries")
-    console.log(result.drinks, "drinks")
-    
+  function createOrder(result: any) { // TODO: create a Result interface
+    burgers = burgers + result.burgers;
+    fries = fries + result.fries;
+    drinks = drinks + result.drinks;
 
-    // burgers += result.order.burgers
-  }
+    let newOrder: Order = {
+      orderNumber: result.order_number,
+      items: [
+        { item: {name: "burgers"}, quantity: result.burgers },
+        { item: {name: "fries"}, quantity: result.fries },
+        { item: {name: "drinks"}, quantity: result.drinks }
+      ],
+      valid: true
+    };
+    orders = [...orders, newOrder];
+  };
+
+  function cancelOrder(result: any) { // TODO: create a Result interface
+    if (result.order_number === 0) return;
+    let orderToCancel = orders.find(order => order.orderNumber === result.order_number);
+    if (orderToCancel) {
+      orderToCancel.valid = false;
+      let b = 0;
+      let f = 0;
+      let d = 0;
+      orderToCancel.items.forEach(item => {
+        if (item.item.name === "burgers") {
+          b = item.quantity;
+        } else if (item.item.name === "fries") {
+          f = item.quantity;
+        } else if (item.item.name === "drinks") {
+          d = item.quantity;
+        };
+      });
+      burgers = burgers - b;
+      fries = fries - f;
+      drinks = drinks - d;
+    };
+  };
 
 </script>
 <div class="flex m-10 justify-evenly">
@@ -97,7 +118,7 @@
     <ul class="block ml-20 mr-20">
       <h3>Order History:</h3>
         {#each orders as order}
-      <li class="flex justify-between p-3 m-3 rounded-lg outline {!order.valid && "line-through"}"><span>Order #{order.id}</span><span>{order.items.map((item) => {
+      <li class="flex justify-between p-3 m-3 rounded-lg outline {!order.valid && "line-through"}"><span>Order #{order.orderNumber}</span><span>{order.items.map((item) => {
         return (
           ` ${item.quantity} ${item.item.name}`
         )
